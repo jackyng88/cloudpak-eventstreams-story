@@ -54,7 +54,36 @@
 
 ![Connect to this Cluster](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Connect%20to%20this%20Cluster.png)
 
-3. 
+3. Keep note of your Bootstrap Server Address. Save this somewhere as we will need this later to configure our Quarkus Application's connection to the Event Streams instance.
+
+![Bootstrap Address](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Bootstrap%20Server.png)
+
+
+4. Generate your API Key. Click the Generate API Key button.
+
+![Generate API Key 1](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Generate%20API%20Key%201.png)
+
+
+5. Select a name for your application. It doesn't really matter too much what you name it. Also choose the Produce, Consume, Create Topics and Schema Option.
+
+![Generate API Key 2](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Generate%20API%20Key%202.png)
+
+6. Select All Topics and then click Next.
+
+![Generate API Key 3](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Generate%20API%20Key%203.png)
+
+7. Leave it All Consumer Groups on "ON" and click Next.
+
+![Generate API Key 4](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Generate%20API%20Key%204.png)
+
+8. You can copy down your API Key by hitting the Copy API Key button, or you can select Download as JSON so you can have a .json file with your API Key for better organization. Afterwards hit Close.
+
+![Generate API Key 5](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Generate%20API%20Key%205.png)
+
+9. Download the Java truststore .jks certificate and take note of the truststore password.
+
+
+
 
 
 ## Creating the Quarkus with MicroProfile Reactive Messaging Application - 
