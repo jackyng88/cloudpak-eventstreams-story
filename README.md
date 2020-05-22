@@ -18,12 +18,12 @@
    - An S3 Bucket policy so we can perform actions on the S3 bucket.
 
 
-## Creating Event Streams Topics, API Key, and Necessary Certificates - 
+## Creating Event Streams Topics - 
 1. Navigate to the Cloud Pak for Integration Platform Navigator. 
 
 2. Click View Instances and click the Event Streams instance that you have created.
 
-3. Create the INBOUND topic.
+3. Click the Topics option on the left. Create the INBOUND topic.
 
 ![Create Topic](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/create%20topic.png)
 
@@ -31,7 +31,31 @@
 
 4. Leave Partitions at 1.
 
-![Partition]()
+![Partition](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/partitions.png)
+
+5. Depending on how long you want messages to persist you can change this.
+
+![Message Retention](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/message%20retention.png)
+
+6. You can leave Replication Factor at the default 3.
+
+![Replication](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/replicas.png)
+
+7. Click Create.
+
+8. Create an OUTBOUND topic following the prior steps as well.
+
+
+## Event Streams Security: API Key, Credentials and Certificates - 
+
+1. To connect to our Event Streams Instance we will need to follow a few steps to properly connect to it.
+
+2. While viewing our Event Streams Instance, navigate to the Topics menu from the left. Click Connect to this Cluster - 
+
+![Connect to this Cluster](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Connect%20to%20this%20Cluster.png)
+
+3. 
+
 
 ## Creating the Quarkus with MicroProfile Reactive Messaging Application - 
 1. Create the Quarkus project. You can replace <> and the contents inside of <> with whatever you would like.
