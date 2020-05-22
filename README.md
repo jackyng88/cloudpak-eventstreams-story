@@ -18,6 +18,21 @@
    - An S3 Bucket policy so we can perform actions on the S3 bucket.
 
 
+## Creating Event Streams Topics, API Key, and Necessary Certificates - 
+1. Navigate to the Cloud Pak for Integration Platform Navigator. 
+
+2. Click View Instances and click the Event Streams instance that you have created.
+
+3. Create the INBOUND topic.
+
+![Create Topic](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/create%20topic.png)
+
+![Topic Name](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/inbound%20topic%20name.png)
+
+4. Leave Partitions at 1.
+
+![Partition]()
+
 ## Creating the Quarkus with MicroProfile Reactive Messaging Application - 
 1. Create the Quarkus project. You can replace <> and the contents inside of <> with whatever you would like.
 
@@ -36,5 +51,80 @@ mvn io.quarkus:quarkus-maven-plugin:1.4.2.Final:create \
 src/main/java/org/acme/kafka/producer/Producer.java
 ```
 
+![Quarkus Project Folder Structure](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Quarkus%20folder%20structure.png)
 
 
+4. Within your Producer.java file add the following code - 
+
+```
+package org.acme.kafka.producer;
+
+import io.reactivex.Flowable;
+import io.smallrye.reactive.messaging.kafka.KafkaRecord;
+
+import org.eclipse.microprofile.reactive.messaging.Outgoing;
+
+import javax.enterprise.context.ApplicationScoped;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * This class produces a message every 5 seconds.
+ * The Kafka configuration is specified in the application.properties file.
+*/
+@ApplicationScoped
+public class Producer {
+
+    private Random random = new Random();
+
+    @Outgoing("TOPIC-NAME")      
+    public Flowable<KafkaRecord<Integer, String>> generate() {
+        return Flowable.interval(5, TimeUnit.SECONDS)    
+                .onBackpressureDrop()
+                .map(tick -> {      
+                    return KafkaRecord.of(random.nextInt(100), String.valueOf(random.nextInt(100)));
+                });
+    }                  
+}
+
+```
+
+Take note on the line tha says @Outgoing("TOPIC-NAME"). Choose a topic name. For the purposes of this story we will use the INBOUND topic name. 
+
+```@Outgoing("INBOUND") ```
+
+Technically in @Outgoing("") is for specifying the name of the Channel, but it will default to a topic if a topic name is not provided in the application.properties file. We will address that a little bit later.
+
+
+* What does this Producer.java code do? 
+   - The @Outgoing annotation indicates that we're sending to a Channel (or Topic) and we're not expecting any data.
+   - The generate() function returns an [RX Java 2 Flowable Object](https://www.baeldung.com/rxjava-2-flowable) emmitted every 5 seconds. 
+   - The Flowable object returns a KafkaRecord of type <Integer, String>.
+   
+   
+5. We will now need to update our applications.properties file that was automatically generated when the Quarkus project was created located here - 
+
+``` src/main/resources/application.properties```
+
+![application properties structure](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/application%20properties%20structure.png)
+
+6. Copy and paste the following into your application.properties file - 
+
+```
+# Event Streams instance connection details. The channel here (INBOUND) will by default be set as the topic.
+mp.messaging.connector.smallrye-kafka.bootstrap.servers=<es-bootstrap-address>
+mp.messaging.outgoing.INBOUND.connector=smallrye-kafka
+
+# Event Streams security credentials if necessary (in cases where SSL is enabled). Serializers used for outgoing
+# and deserializers are used for incoming messages.
+mp.messaging.outgoing.INBOUND.key.serializer=org.apache.kafka.common.serialization.IntegerSerializer
+mp.messaging.outgoing.INBOUND.value.serializer=org.apache.kafka.common.serialization.StringSerializer
+mp.messaging.outgoing.INBOUND.sasl.mechanism=PLAIN
+mp.messaging.outgoing.INBOUND.security.protocol=SASL_SSL
+mp.messaging.outgoing.INBOUND.ssl.protocol=TLSv1.2
+mp.messaging.outgoing.INBOUND.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+            username="token" \
+            password="<APIKey>";
+mp.messaging.outgoing.INBOUND.ssl.truststore.location=</filepath-to-es-truststorefile/>es-cert.jks
+mp.messaging.outgoing.INBOUND.ssl.truststore.password=password
+```
