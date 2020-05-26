@@ -6,6 +6,8 @@
 3. We will create a simple Quarkus (a super sonic and sub-atomic Kubernetes native framework for Java) application that utilizes MicroProfile Reactive Messaging in order for us to send a stream of data to our Event Streams/Kafka topic.
 4. After that we will use the capabilities of the Strimzi Operator on OpenShift to deploy a KafkaConnect S2I cluster and also AWS S3 Sink and Source connectors built using the Apache Camel KafkaConnect binaries. From our Quarkus application we will send messages to an Inbound (Sink) topic which will trigger the Camel S3 Sink Connector to pull from that topic and put that data into an AWS S3 Bucket. We will then have the Camel S3 Sink Connector pull from the AWS S3 bucket and place the contents into an Outbound (Source) Topic. We will follow the steps outlined here [Kafka Connect to S3 Sink & Source](https://ibm-cloud-architecture.github.io/refarch-eda/scenarios/connect-s3/)
 
+![Architecture Diagram](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Quarkus%20to%20Event%20Streams%20to%20S3%20Arch%20Diagram%20image.png)
+
 
 ## Pre-requisites - 
 1. OpenShift Container Platform Cluster - This story will assume you have a 4.x Cluster.
@@ -223,3 +225,18 @@ mp.messaging.outgoing.INBOUND.ssl.truststore.password=<password>
 ![ES Topic Messages](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Event%20Streams%20topic%20messages.png)
 
 
+## Creating AWS S3 Bucket and setting up the AWS S3 Bucket Policy - 
+
+1. Assuming your AWS username/IAM has the proper AmazonS3FullAccessPolicy we can proceed with setting up the AWS S3 bucket for use with the connectors. 
+
+2. Traverse to the AWS S3 section.
+
+3. Create an S3 Bucket. 
+
+
+
+
+
+## Setting up the KafkaConnect Strimzi Operator - 
+
+1. 
