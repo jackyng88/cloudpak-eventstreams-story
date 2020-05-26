@@ -92,6 +92,9 @@
 11. Make sure you have these files in the same folder.
 
 
+<ins>Summary</ins> - We now have the bootstrap server address, API Key, .jks truststore certificate, and the truststore password associated with that certificate to allow us the ability to connect to our Event Streams instance.
+
+
 
 ## Creating the Quarkus with MicroProfile Reactive Messaging Application - 
 1. Create the Quarkus project. You can replace <> and the contents inside of <> with whatever you would like.
@@ -137,7 +140,7 @@ public class Producer {
 
     private Random random = new Random();
 
-    @Outgoing("TOPIC-NAME")      
+    @Outgoing("<TOPIC-NAME>")      
     public Flowable<KafkaRecord<Integer, String>> generate() {
         return Flowable.interval(5, TimeUnit.SECONDS)    
                 .onBackpressureDrop()
@@ -149,7 +152,7 @@ public class Producer {
 
 ```
 
-Take note on the line tha says @Outgoing("TOPIC-NAME"). Choose a topic name. For the purposes of this story we will use the INBOUND topic name. 
+Take note on the line that says @Outgoing("<TOPIC-NAME>"). For the purposes of this story we will use the INBOUND topic name that we created in the Event Streams Topic step earlier. Replace whatever is inside the quotation marks.
 
 ```@Outgoing("INBOUND") ```
 
@@ -186,5 +189,36 @@ mp.messaging.outgoing.INBOUND.sasl.jaas.config=org.apache.kafka.common.security.
             username="token" \
             password="<APIKey>";
 mp.messaging.outgoing.INBOUND.ssl.truststore.location=</filepath-to-es-truststorefile/>es-cert.jks
-mp.messaging.outgoing.INBOUND.ssl.truststore.password=password
+mp.messaging.outgoing.INBOUND.ssl.truststore.password=<password>
 ```
+
+7. Replace <es-bootstrap-address> with the address of your Event Streams bootstrap server address that we took note of earlier. 
+   
+```mp.messaging.connector.smallrye-kafka.bootstrap.servers=<es-bootstrap-address>```
+
+8. Replace <APIKey> with your API Key obtained earlier.
+   
+```mp.messaging.outgoing.INBOUND.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+            username="token" \
+            password="<APIKey>";```
+            
+9. Provide the file path to your Event Streams .jks certificate file. Replace </filepath-to-es-truststorefile/>
+
+```mp.messaging.outgoing.INBOUND.ssl.truststore.location=</filepath-to-es-truststorefile/>es-cert.jks```
+
+10. Provide the truststore password. By default it should just be password.
+
+```mp.messaging.outgoing.INBOUND.ssl.truststore.password=<password>```
+
+
+11. Great! We now have our simple Quarkus Kafka Producer with our Event Streams credentials. We can now test the connection.
+
+12. Run the producer code by running the following command 
+
+```./mvnw quarkus:dev```
+
+13. Since the code sends a message every 5 seconds, you can leave it on for a bit or you can change it to send it more frequently. Check out the Event Streams instance in the browser UI topic for messages. You can click the message under "Indexed Timestamp" to see the contents and details of the message.
+
+![ES Topic Messages](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Event%20Streams%20topic%20messages.png)
+
+
