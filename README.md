@@ -80,9 +80,16 @@
 
 ![Generate API Key 5](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Generate%20API%20Key%205.png)
 
-9. Download the Java truststore .jks certificate and take note of the truststore password.
+9. Download the Java truststore .jks certificate.
+
+![JKS Truststore](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/JKS%20Cert.png)
 
 
+10. Write/keep track of the truststore password.
+
+![Truststore password](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/JKS%20Truststore%20password.png)
+
+11. Make sure you have these files in the same folder.
 
 
 
