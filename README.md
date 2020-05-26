@@ -200,7 +200,8 @@ mp.messaging.outgoing.INBOUND.ssl.truststore.password=<password>
    
 ```mp.messaging.outgoing.INBOUND.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
             username="token" \
-            password="<APIKey>";```
+            password="<APIKey>";
+```
             
 9. Provide the file path to your Event Streams .jks certificate file. Replace </filepath-to-es-truststorefile/>
 
