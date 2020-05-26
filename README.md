@@ -227,15 +227,69 @@ mp.messaging.outgoing.INBOUND.ssl.truststore.password=<password>
 
 ## Creating AWS S3 Bucket and setting up the AWS S3 Bucket Policy - 
 
+For more information on S3 Bucket policies you can read up [here](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-bucket-policies.html)
+
 1. Assuming your AWS username/IAM has the proper AmazonS3FullAccessPolicy we can proceed with setting up the AWS S3 bucket for use with the connectors. 
 
 2. Traverse to the AWS S3 section.
 
 3. Create an S3 Bucket. 
 
+![Create S3 Bucket](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/Create%20S3%20Bucket.png)
+
+4. In the Configure Options section you have access to extra features for your S3 Bucket. For the purposes of this flow you won't need any of these but you can feel free to use them if you would like.
+
+![Configure S3 Options](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/AWS%20S3%20Configure%20Options.png)
+
+5. For the purposes of this simple use case we can uncheck "Block all public access" and then check "I acknowledge that the current settings may result in this bucket and the objects within becoming public". You can change this back to block access to the bucket later if you so choose.
+
+![S3 Permissions](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/AWS%20S3%20Permissions.png)
+
+6. Review your bucket options and then Create bucket.
+
+7. Once the S3 bucket has been created; click on your newly created bucket and then from the menu select "Permission" and then "Bucket Policy".
+
+![S3 Bucket Policy](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/AWS%20S3%20Bucket%20Policy.png)
+
+8. Next, click on "Policy generator". This will open a new window/tab.
+
+![S3 Policy Generator](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/AWS%20S3%20Policy%20Generator.png)
+
+9. In this Policy generator, from the "Select type of Policy drop-down" select "S3 Bucket Policy".
+
+10. Under principal you will need to fill it with the IAM user ID in various fashions. For more information on that you can go to [AWS Principal Documentation](https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-bucket-user-policy-specifying-principal-intro.html). For instance replace the below - 
+
+```arn:aws:iam::<account-id>:user/<iam-user-id>```
+
+```arn:aws:iam::123456789012:user/user@test.com```
 
 
+11. From the "Actions" drop-down select "List Bucket"
 
+12. For "Amazon Resource Name (ARN)" fill in the below and replace <bucket-name> with your S3 bucket name - 
+
+```arn:aws:s3:::<bucket-name>/```
+
+13. Hit Create Statement.
+
+14. Now we need to repeat the previous Steps from 9 to 13. We need a second statement to allow us to access the Objects themselves in the bucket. The previous "List Bucket" steps works on a Bucket-level and the next policy statement is for the Object-level.
+
+15. In this new statement the "Policy type", "Principal", are the same. Under the "Actions" drop-down menu select the following options - "DeleteObject", "GetObject", and "PutObject". 
+
+16. For "Amazon Resource Name (ARN)" it's almost the same as what we entered previously i.e. arn:aws:s3:::<bucket-name>/ however we need to append a * at the end. The reason for this is to allow us to have access to all the Objects within that bucket. Without this it will not behave properly.
+   
+```arn:aws:s3:::<bucket-name>/*```
+
+17. Create the Statement and should look similar to below - 
+
+![S3 Policy Generator Statements](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/AWS%20S3%20Policy%20Generator%20Statements.png)
+
+
+18. Finally hit "Generate Policy" and copy this JSON into your S3 Bucket's Bucket policy. It should look similar to something like this - 
+
+![S3 Bucket Policy Implemented](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/AWS%20S3%20Bucket%20Policy%20implemented.png)
+
+19. Lastly hit the "Save" button.
 
 ## Setting up the KafkaConnect Strimzi Operator - 
 
