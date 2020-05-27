@@ -500,7 +500,7 @@ spec:
 ```cp connectors/camel-aws-s3-kafka-connector/target/camel-aws-s3-kafka-connector-0.1.0.jar core/target/camel-kafka-connector-0.1.0-package/share/java/camel-kafka-connector/```
 
 
-5. We will now start an OpenShift build from the previously generated S3 artifacts. 
+5. We will now start an OpenShift build from the previously generated S3 artifacts. Note the ```connect-cluster-101-connect``` after start-build. The ```-connect``` was appended automatically when our Kafka Connect cluster pod was created.
 
 ```
 oc start-build connect-cluster-101-connect --from-dir=./core/target/camel-kafka-connector-0.0.1-SNAPSHOT-package/share/java --follow
@@ -513,4 +513,55 @@ oc start-build connect-cluster-101-connect --from-dir=./core/target/camel-kafka-
 
 ## Deploying the Kafka to S3 Sink Connector - 
 
-1. 
+1. Now that we have a Kafka Connect Cluster up, we will need to create an S3 Sink Connector with a KafkaConnect custom resource definition managed by the Strimzi Operator that we deployed.
+
+2. Create a ```kafka-sink-connector.yaml``` file.
+
+```vi kafka-sink-connector.yaml```
+
+3. Paste the following into the newly created .yaml file.
+
+```apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaConnector
+metadata:
+  name: s3-sink-connector
+  labels:
+    strimzi.io/cluster: connect-cluster-101
+spec:
+  class: org.apache.camel.kafkaconnector.CamelSinkConnector
+  tasksMax: 1
+  config:
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.kafka.connect.storage.StringConverter
+    topics: INBOUND
+    camel.sink.url: aws-s3://<my-s3-bucket>?keyName=${date:now:yyyyMMdd-HHmmssSSS}-${exchangeId}
+    camel.sink.maxPollDuration: 10000
+    camel.component.aws-s3.configuration.autocloseBody: false
+    camel.component.aws-s3.accessKey: ${file:/opt/kafka/external-configuration/aws-credentials/aws-credentials.properties:aws_access_key_id}
+    camel.component.aws-s3.secretKey: ${file:/opt/kafka/external-configuration/aws-credentials/aws-credentials.properties:aws_secret_access_key}
+    camel.component.aws-s3.region: <US_EAST_1>
+```
+
+Similar to the kafka-connect.yaml file there are a few things here to keep note of - 
+
+- ```metadata.labels.strimzi.io/cluster```: This needs to match the name of the Kafka Connect cluster.
+- ```spec.config.topics```: The name of the topic we created earlier for Inbound messages. The INBOUND topic was created in the "Creating Event Streams Topics" section for example.
+- ```spec.config.camel.sink.url": You will need to replace <my-s3-bucket> with the name of your AWS S3 bucket. If the name of the created bucket is ```my-s3-bucket``` then ```camel.sink.url``` will look like ```camel.sink.url: aws-s3://my-s3-bucket?keyName=${date:now:yyyyMMdd-HHmmssSSS}-${exchangeId}```. 
+- ```spec.config.camel.component.aws-s3.region```: You will need to indicate the region that your S3 bucket is in. Replace <US_EAST_1> with your bucket's region.
+
+4. Save the file and create the custom resource definition for the connector by applying it.
+
+```oc apply -f kafka-sink-connector.yaml```
+
+5. You can see if the connector was created by running the following - 
+
+```oc get kafkaconnector```
+
+6. This can take a few minutes but you can check the logs of the KafkaConnector by using the following command - 
+
+```oc get kafkaconnector s3-sink-connector -o yaml```
+
+7. In the logs once the section of the ```Status:``` object returns True we can proceed. 
+
+
+## Deploying the Kafka to S3 Source Connector - 
