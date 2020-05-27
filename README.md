@@ -319,7 +319,7 @@ For more information on S3 Bucket policies you can read up [here](https://docs.a
 
 
 
-7. When the Strimzi Operator finally says Installed in the "Installed Operators" section in the Web console or 1/1 Running in the Pod status we may proceed.
+7. When the Strimzi Operator finally says Succeeded in the "Installed Operators" section in the Web console or 1/1 Running in the Pod status we may proceed.
 
 
 
