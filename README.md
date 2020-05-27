@@ -291,7 +291,7 @@ For more information on S3 Bucket policies you can read up [here](https://docs.a
 
 19. Lastly hit the "Save" button.
 
-## Setting up the KafkaConnect Strimzi Operator - 
+## Setting up the Kafka Strimzi Operator - 
 
 1. As part of the pre-requisites this assumes that you have a 4.x OpenShift Container Platform cluster we will use the Strimzi Operator to deploy our Kafka cluster. 
 
@@ -327,3 +327,138 @@ For more information on S3 Bucket policies you can read up [here](https://docs.a
 
 ![Operator Console](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Strimzi%20Operator%20Console.png)
 
+## Setting up the Kafka Connect and the Apache Camel S3 Sink and Source Connectors - 
+
+Note - As stated in the pre-requisites section we will be mirroring the steps followed here at [Kafka Connect to S3 Sink & Source](https://ibm-cloud-architecture.github.io/refarch-eda/scenarios/connect-s3/) for more granular information and reading.
+
+1. Now that we have our Strimzi Kafka Operator installed we need the secrets and appropriate credentials set up.
+
+2. You will need to be logged into your OpenShift Cluster through the terminal. You can do this by going to the OpenShift Web UI and going to the top right and hitting the User (likely kube:admin in this case) and then "Copy Login command" and then "Display Token". Copy and paste the "Log in with this token" command into your terminal.
+
+3. I would advise you to create a new Project/Namespace to separate secrets and logic but that's up to you.
+
+```oc new-project es-s3-test```
+
+4. We will create a new file to store our AWS credentials. Create a new file named ```aws-credentials.properties```
+
+```vi aws-credentials.properties```
+
+5. Place the below into the properties file and use your user/IAM credentials in place of <>.
+
+```
+aws_access_key_id=<AKIA123456EXAMPLE>
+aws_secret_access_key=<strWrz/bb8%c3po/r2d2EXAMPLEKEY>
+```
+
+6. Create the secret from the aws-credentials.properties file. You can use the ```oc get secrets``` command in the proper project/namespace to see if it was created. This secret will be injected into the KafkaConnect cluster later.
+
+```kubectl create secret generic aws-credentials --from-file=aws-credentials.properties```
+
+7. Like the previous step we need to create another secret for our Event Streams API Key that we gathered from the "Event Streams Security: API Key, Credentials and Certificates" Section earlier. This secret will be injected into the KafkaConnect cluster at run time as well. Replace <eventstreams_api_key> with your API key. This should also be in the ```es-api-key.json``` file earlier if you chose the "Download as JSON" option.
+
+```kubectl create secret generic eventstreams-apikey --from-literal=password=<eventstreams_api_key>```
+
+8. We will now create/generate the proper certificate for use with the Kafka Connect cluster. By default our Event Streams certificate is a .jks file but we need to convert this to a .crt file. Run the following commands. These commands convert the .jks file to a new es-cert.crt file and then creates a Kubernetes/OpenShift secret for use with the KafkaConnect cluster.
+
+```
+keytool -importkeystore -srckeystore es-cert.jks -destkeystore es-cert.p12 -deststoretype PKCS12
+openssl pkcs12 -in es-cert.p12 -nokeys -out es-cert.crt
+kubectl create secret generic eventstreams-truststore-cert --from-file=es-cert.crt
+```
+
+9. (OPTIONAL) This is an Optional step. Apache Camel by default can log potentially sensitive access key information to the log files. To remedy that we will use a log4j ConfigMap to filter out that potentially sensitive information. Create a log4j.properties file and paste the following into it.
+
+```vi log4j.properties```
+
+```
+# Do not change this generated file. Logging can be configured in the corresponding kubernetes/openshift resource.
+log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE.layout.ConversionPattern=%d{ISO8601} %p %m (%c) [%t]%n
+connect.root.logger.level=INFO
+log4j.rootLogger=${connect.root.logger.level}, CONSOLE
+log4j.logger.org.apache.zookeeper=ERROR
+log4j.logger.org.I0Itec.zkclient=ERROR
+log4j.logger.org.reflections=ERROR
+
+# Due to back-leveled version of log4j that is included in Kafka Connect,
+# we can use multiple StringMatchFilters to remove all the permutations
+# of the AWS accessKey and secretKey values that may get dumped to stdout
+# and thus into any connected logging system.
+log4j.appender.CONSOLE.filter.a=org.apache.log4j.varia.StringMatchFilter
+log4j.appender.CONSOLE.filter.a.StringToMatch=accesskey
+log4j.appender.CONSOLE.filter.a.AcceptOnMatch=false
+log4j.appender.CONSOLE.filter.b=org.apache.log4j.varia.StringMatchFilter
+log4j.appender.CONSOLE.filter.b.StringToMatch=accessKey
+log4j.appender.CONSOLE.filter.b.AcceptOnMatch=false
+log4j.appender.CONSOLE.filter.c=org.apache.log4j.varia.StringMatchFilter
+log4j.appender.CONSOLE.filter.c.StringToMatch=AccessKey
+log4j.appender.CONSOLE.filter.c.AcceptOnMatch=false
+log4j.appender.CONSOLE.filter.d=org.apache.log4j.varia.StringMatchFilter
+log4j.appender.CONSOLE.filter.d.StringToMatch=ACCESSKEY
+log4j.appender.CONSOLE.filter.d.AcceptOnMatch=false
+
+log4j.appender.CONSOLE.filter.e=org.apache.log4j.varia.StringMatchFilter
+log4j.appender.CONSOLE.filter.e.StringToMatch=secretkey
+log4j.appender.CONSOLE.filter.e.AcceptOnMatch=false
+log4j.appender.CONSOLE.filter.f=org.apache.log4j.varia.StringMatchFilter
+log4j.appender.CONSOLE.filter.f.StringToMatch=secretKey
+log4j.appender.CONSOLE.filter.f.AcceptOnMatch=false
+log4j.appender.CONSOLE.filter.g=org.apache.log4j.varia.StringMatchFilter
+log4j.appender.CONSOLE.filter.g.StringToMatch=SecretKey
+log4j.appender.CONSOLE.filter.g.AcceptOnMatch=false
+log4j.appender.CONSOLE.filter.h=org.apache.log4j.varia.StringMatchFilter
+log4j.appender.CONSOLE.filter.h.StringToMatch=SECRETKEY
+log4j.appender.CONSOLE.filter.h.AcceptOnMatch=false
+```
+
+10. (OPTIONAL) We can now create the ConfigMap from the newly created properties file.
+
+```kubectl create configmap custom-connect-log4j --from-file=log4j.properties```
+
+11. We will now deploy the base KafkaConnect Cluster using KafkaConnectS2I (Source to Image) custom resource. Create a new ```kafka-connect.yaml``` file and paste the following. 
+
+```vi kafka-connect.yaml```
+
+```
+apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaConnectS2I
+metadata:
+  name: connect-cluster-101
+  annotations:
+    strimzi.io/use-connector-resources: "true"
+spec:
+  #logging:
+  #  type: external
+  #  name: custom-connect-log4j
+  replicas: 1
+  bootstrapServers: es-1-ibm-es-proxy-route-bootstrap-eventstreams.apps.cluster.local:443
+  tls:
+    trustedCertificates:
+      - certificate: es-cert.crt
+        secretName: eventstreams-truststore-cert
+  authentication:
+    passwordSecret:
+      secretName: eventstreams-apikey
+      password: password
+    username: token
+    type: plain
+  externalConfiguration:
+    volumes:
+      - name: aws-credentials
+        secret:
+          secretName: aws-credentials
+  config:
+    group.id: connect-cluster-101
+    config.providers: file
+    config.providers.file.class: org.apache.kafka.common.config.provider.FileConfigProvider
+    key.converter: org.apache.kafka.connect.json.JsonConverter
+    value.converter: org.apache.kafka.connect.json.JsonConverter
+    key.converter.schemas.enable: false
+    value.converter.schemas.enable: false
+    offset.storage.topic: connect-cluster-101-offsets
+    config.storage.topic: connect-cluster-101-configs
+    status.storage.topic: connect-cluster-101-status
+ ```
+ 
+ NOTE - We will need to take note and will need to create new Topics as well.
