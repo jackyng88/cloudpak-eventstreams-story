@@ -469,7 +469,7 @@ spec:
  - ```spec.authentication.passwordSecret.secretName```: The name of the OpenShift secret created from the Event Streams API Key created in Step 7.
  - ```spec.externalConfiguration.volumes[0].secret.secretName```: The name of the OpenShift secret created from the AWS credentials created in Step 6.
  - ```spec.config['group.id']```: This should be a unique ID for connecting to the same set of Kafka brokers. If we do not specify a name, multiple KafkaConnect instances will end up using the default id and end up in a race condition as they all try to vie for access.
- - ```spec.config['*.storage.topic']```: As noted in the .yaml file we have ```offset.storage.topic```, ```config..storage.topic```, and ```status..storage.topic```. The name of these topics will need to be created in your Event Streams instance to store the metadata. See the "Creating Event Streams Topics" section for a refresher on creating Event Streams topics. 
+ - ```spec.config['*.storage.topic']```: As noted in the .yaml file we have ```offset.storage.topic```, ```config.storage.topic```, and ```status.storage.topic```. The name of these topics will need to be created in your Event Streams instance to store the metadata. See the "Creating Event Streams Topics" section for a refresher on creating Event Streams topics. 
  
  
  12. Make sure the ```kafka-connect.yaml``` files values are correctly configured and save it. From the terminal run the following - 
@@ -478,12 +478,39 @@ spec:
  13. You can check the status of the pods by running ```oc get pods```. When they're all Running we can proceed.
  
  
- ## Building the Camel Kafka Connect binaries - 
+ ## Building the Apache Camel Kafka Connect binaries - 
  
- 1. We will need to clone from a github repository using HTTPS or SSH depending on preference.
+ 1. We will need to clone from a github repository using HTTPS or SSH depending on preference. Note that the below github repository is a fork of the official [Apache Camel repository](https://github.com/apache/camel-kafka-connector).
  
  ```git clone https://github.com/osowski/camel-kafka-connector.git```
  
  ```git clone git@github.com:osowski/camel-kafka-connector.git```
  
+ 2. Change to the camel-kafka-connector-0.1.0-branch branch
  
+ ```git checkout camel-kafka-connector-0.1.0-branch```
+ 
+ 3. We will now build the project with Maven. Note that this can take around 30 minutes! 
+ 
+ ```mvn clean package```
+ 
+ 4. Once the build is complete copy the generated S3 artifacts to the core package build artifacts.
+ 
+
+```cp connectors/camel-aws-s3-kafka-connector/target/camel-aws-s3-kafka-connector-0.1.0.jar core/target/camel-kafka-connector-0.1.0-package/share/java/camel-kafka-connector/```
+
+
+5. We will now start an OpenShift build from the previously generated S3 artifacts. 
+
+```
+oc start-build connect-cluster-101-connect --from-dir=./core/target/camel-kafka-connector-0.0.1-SNAPSHOT-package/share/java --follow
+```
+
+6. Check the status of your new build. This build should've created a new pod with a name along the lines of ```connect-cluster-101-connect-2-[random-suffix]```. The original pod should have had a name similar to ```connect-cluster-101-connect-1-[random-suffix]``` with a 1 instead of a 2 for instance. Wait for the pod to go into a Running state.
+
+```oc get pods -w```
+
+
+## Deploying the Kafka to S3 Sink Connector - 
+
+1. 
