@@ -546,7 +546,7 @@ Similar to the kafka-connect.yaml file there are a few things here to keep note 
 
 - ```metadata.labels.strimzi.io/cluster```: This needs to match the name of the Kafka Connect cluster.
 - ```spec.config.topics```: The name of the topic we created earlier for Inbound messages. The INBOUND topic was created in the "Creating Event Streams Topics" section for example.
-- ```spec.config.camel.sink.url": You will need to replace <my-s3-bucket> with the name of your AWS S3 bucket. If the name of the created bucket is ```my-s3-bucket``` then ```camel.sink.url``` will look like ```camel.sink.url: aws-s3://my-s3-bucket?keyName=${date:now:yyyyMMdd-HHmmssSSS}-${exchangeId}```. 
+- ```spec.config.camel.sink.url"```: You will need to replace <my-s3-bucket> with the name of your AWS S3 bucket. If the name of the created bucket is ```my-s3-bucket``` then ```camel.sink.url``` will look like ```camel.sink.url: aws-s3://my-s3-bucket?keyName=${date:now:yyyyMMdd-HHmmssSSS}-${exchangeId}```. 
 - ```spec.config.camel.component.aws-s3.region```: You will need to indicate the region that your S3 bucket is in. Replace <US_EAST_1> with your bucket's region.
 
 4. Save the file and create the custom resource definition for the connector by applying it.
