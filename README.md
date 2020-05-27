@@ -276,7 +276,7 @@ For more information on S3 Bucket policies you can read up [here](https://docs.a
 
 15. In this new statement the "Policy type", "Principal", are the same. Under the "Actions" drop-down menu select the following options - "DeleteObject", "GetObject", and "PutObject". 
 
-16. For "Amazon Resource Name (ARN)" it's almost the same as what we entered previously i.e. arn:aws:s3:::<bucket-name>/ however we need to append a * at the end. The reason for this is to allow us to have access to all the Objects within that bucket. Without this it will not behave properly.
+16. For "Amazon Resource Name (ARN)" it's almost the same as what we entered previously i.e. arn:aws:s3:::bucket-name/ however we need to append a * at the end. The reason for this is to allow us to have access to all the Objects within that bucket. Without this it will not behave properly.
    
 ```arn:aws:s3:::<bucket-name>/*```
 
