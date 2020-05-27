@@ -327,7 +327,7 @@ For more information on S3 Bucket policies you can read up [here](https://docs.a
 
 ![Operator Console](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Strimzi%20Operator%20Console.png)
 
-## Setting up the Kafka Connect and the Apache Camel S3 Sink and Source Connectors - 
+## Setting up the Kafka Connect Cluster - 
 
 Note - As stated in the pre-requisites section we will be mirroring the steps followed here at [Kafka Connect to S3 Sink & Source](https://ibm-cloud-architecture.github.io/refarch-eda/scenarios/connect-s3/) for more granular information and reading.
 
@@ -352,18 +352,18 @@ aws_secret_access_key=<strWrz/bb8%c3po/r2d2EXAMPLEKEY>
 
 6. Create the secret from the aws-credentials.properties file. You can use the ```oc get secrets``` command in the proper project/namespace to see if it was created. This secret will be injected into the KafkaConnect cluster later.
 
-```kubectl create secret generic aws-credentials --from-file=aws-credentials.properties```
+```oc create secret generic aws-credentials --from-file=aws-credentials.properties```
 
 7. Like the previous step we need to create another secret for our Event Streams API Key that we gathered from the "Event Streams Security: API Key, Credentials and Certificates" Section earlier. This secret will be injected into the KafkaConnect cluster at run time as well. Replace <eventstreams_api_key> with your API key. This should also be in the ```es-api-key.json``` file earlier if you chose the "Download as JSON" option.
 
-```kubectl create secret generic eventstreams-apikey --from-literal=password=<eventstreams_api_key>```
+```oc create secret generic eventstreams-apikey --from-literal=password=<eventstreams_api_key>```
 
 8. We will now create/generate the proper certificate for use with the Kafka Connect cluster. By default our Event Streams certificate is a .jks file but we need to convert this to a .crt file. Run the following commands. These commands convert the .jks file to a new es-cert.crt file and then creates a Kubernetes/OpenShift secret for use with the KafkaConnect cluster.
 
 ```
 keytool -importkeystore -srckeystore es-cert.jks -destkeystore es-cert.p12 -deststoretype PKCS12
 openssl pkcs12 -in es-cert.p12 -nokeys -out es-cert.crt
-kubectl create secret generic eventstreams-truststore-cert --from-file=es-cert.crt
+oc create secret generic eventstreams-truststore-cert --from-file=es-cert.crt
 ```
 
 9. (OPTIONAL) This is an Optional step. Apache Camel by default can log potentially sensitive access key information to the log files. To remedy that we will use a log4j ConfigMap to filter out that potentially sensitive information. Create a log4j.properties file and paste the following into it.
@@ -414,7 +414,7 @@ log4j.appender.CONSOLE.filter.h.AcceptOnMatch=false
 
 10. (OPTIONAL) We can now create the ConfigMap from the newly created properties file.
 
-```kubectl create configmap custom-connect-log4j --from-file=log4j.properties```
+```oc create configmap custom-connect-log4j --from-file=log4j.properties```
 
 11. We will now deploy the base KafkaConnect Cluster using KafkaConnectS2I (Source to Image) custom resource. Create a new ```kafka-connect.yaml``` file and paste the following. 
 
@@ -432,7 +432,7 @@ spec:
   #  type: external
   #  name: custom-connect-log4j
   replicas: 1
-  bootstrapServers: es-1-ibm-es-proxy-route-bootstrap-eventstreams.apps.cluster.local:443
+  bootstrapServers: <your-bootstrap-server-address:443>
   tls:
     trustedCertificates:
       - certificate: es-cert.crt
@@ -461,4 +461,29 @@ spec:
     status.storage.topic: connect-cluster-101-status
  ```
  
- NOTE - We will need to take note and will need to create new Topics as well.
+ NOTE - The following options are things we need to take note of/configure. 
+ 
+ - (OPTIONAL)```spec.logging.name```: The name of the previously configured log4j ConfigMap. You can uncomment those previous three lines if you opted to create the ConfigMap.
+ - ```spec.bootstrapServers```: Replace with your Event Streams instance bootstrap server address.
+ - ```spec.tls.trustedCertificates[0].secretName```: The name of the OpenShift secret created in Step 8.
+ - ```spec.authentication.passwordSecret.secretName```: The name of the OpenShift secret created from the Event Streams API Key created in Step 7.
+ - ```spec.externalConfiguration.volumes[0].secret.secretName```: The name of the OpenShift secret created from the AWS credentials created in Step 6.
+ - ```spec.config['group.id']```: This should be a unique ID for connecting to the same set of Kafka brokers. If we do not specify a name, multiple KafkaConnect instances will end up using the default id and end up in a race condition as they all try to vie for access.
+ - ```spec.config['*.storage.topic']```: As noted in the .yaml file we have ```offset.storage.topic```, ```config..storage.topic```, and ```status..storage.topic```. The name of these topics will need to be created in your Event Streams instance to store the metadata. See the "Creating Event Streams Topics" section for a refresher on creating Event Streams topics. 
+ 
+ 
+ 12. Make sure the ```kafka-connect.yaml``` files values are correctly configured and save it. From the terminal run the following - 
+ ```oc apply -f kafka-connect.yaml``` 
+ 
+ 13. You can check the status of the pods by running ```oc get pods```. When they're all Running we can proceed.
+ 
+ 
+ ## Building the Camel Kafka Connect binaries - 
+ 
+ 1. We will need to clone from a github repository using HTTPS or SSH depending on preference.
+ 
+ ```git clone https://github.com/osowski/camel-kafka-connector.git```
+ 
+ ```git clone git@github.com:osowski/camel-kafka-connector.git```
+ 
+ 
