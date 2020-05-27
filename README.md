@@ -303,4 +303,27 @@ For more information on S3 Bucket policies you can read up [here](https://docs.a
 
 ![Strimzi](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Strimzi.png)
 
-4. 
+4. Click on the Strimzi Operator and then click "Install".
+
+![Operator Install](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Operator%20Install.png)
+
+5. Make sure that the option to have "All namespaces on the cluster (default)" is checked.
+
+![Operator Subscription](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Operator%20Subscription.png)
+
+6. Tail the status of your Strimzi operator install either through the web console or doing while logged in through OpenShift through your terminal. 
+
+```oc get pods -n openshift-operators```
+
+![Operator Installing](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Strimzi%20Operator%20Installing.png)
+
+
+
+7. When the Strimzi Operator finally says Installed in the "Installed Operators" section in the Web console or 1/1 Running in the Pod status we may proceed.
+
+
+
+![Operator Success](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Strimzi%20Operator%20Success.png)
+
+![Operator Console](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Strimzi%20Operator%20Console.png)
+
