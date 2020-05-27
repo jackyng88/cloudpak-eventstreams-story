@@ -486,11 +486,11 @@ spec:
  
  ```git clone git@github.com:osowski/camel-kafka-connector.git```
  
- 2. Change to the camel-kafka-connector-0.1.0-branch branch
+ 2. Once successfully cloned, change the directory to the root of the cloned repository. Change to the camel-kafka-connector-0.1.0-branch branch
  
  ```git checkout camel-kafka-connector-0.1.0-branch```
  
- 3. Change the directory to the root of the cloned repository. We will now build the project with Maven. Note that this can take around 30 minutes! 
+ 3. We will now build the project with Maven. Note that this can take around 30 minutes! 
  
  ```mvn clean package```
  
