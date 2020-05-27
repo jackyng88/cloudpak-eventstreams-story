@@ -293,4 +293,14 @@ For more information on S3 Bucket policies you can read up [here](https://docs.a
 
 ## Setting up the KafkaConnect Strimzi Operator - 
 
-1. 
+1. As part of the pre-requisites this assumes that you have a 4.x OpenShift Container Platform cluster we will use the Strimzi Operator to deploy our Kafka cluster. 
+
+2. In your OpenShift Web Console, in the "ADMINISTRATOR" view. This is in the top left most portion of the menu. Go to "Operators" > "OperatorHub".
+
+![OperatorHub](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Operator%20Hub.png)
+
+3. Type "Strimzi" into the Search Bar.
+
+![Strimzi](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Strimzi.png)
+
+4. 
