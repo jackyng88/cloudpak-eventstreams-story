@@ -490,7 +490,7 @@ spec:
  
  ```git checkout camel-kafka-connector-0.1.0-branch```
  
- 3. We will now build the project with Maven. Note that this can take around 30 minutes! 
+ 3. Change the directory to the root of the cloned repository. We will now build the project with Maven. Note that this can take around 30 minutes! 
  
  ```mvn clean package```
  
