@@ -503,7 +503,7 @@ spec:
 5. We will now start an OpenShift build from the previously generated S3 artifacts. Note the ```connect-cluster-101-connect``` after start-build. The ```-connect``` was appended automatically when our Kafka Connect cluster pod was created.
 
 ```
-oc start-build connect-cluster-101-connect --from-dir=./core/target/camel-kafka-connector-0.0.1-SNAPSHOT-package/share/java --follow
+oc start-build connect-cluster-101-connect --from-dir=./core/target/camel-kafka-connector-0.1.0-package/share/java --follow
 ```
 
 6. Check the status of your new build. This build should've created a new pod with a name along the lines of ```connect-cluster-101-connect-2-[random-suffix]```. The original pod should have had a name similar to ```connect-cluster-101-connect-1-[random-suffix]``` with a 1 instead of a 2 for instance. Wait for the pod to go into a Running state.
