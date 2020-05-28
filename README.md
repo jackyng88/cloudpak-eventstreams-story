@@ -513,6 +513,8 @@ oc start-build connect-cluster-101-connect --from-dir=./core/target/camel-kafka-
 
 ## Deploying the Kafka to S3 Sink Connector - 
 
+- The Sink connector's function is for taking data from an internal system and moving it to an external system. In this case, our Kafka Topic (internal) to an AWS S3 Bucket (external).
+
 1. Now that we have a Kafka Connect Cluster up, we will need to create an S3 Sink Connector with a KafkaConnect custom resource definition managed by the Strimzi Operator that we deployed.
 
 2. Create a ```kafka-sink-connector.yaml``` file.
@@ -561,7 +563,76 @@ Similar to the kafka-connect.yaml file there are a few things here to keep note 
 
 ```oc get kafkaconnector s3-sink-connector -o yaml```
 
-7. In the logs once the section of the ```Status:``` object returns True we can proceed. 
+7. In the logs once the section of the ```Status.connectorStatus.connector.state:``` object returns `RUNNING` it means that the connector was successfully created and we can proceed!
+
+![S3 Sink Connector Running](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/S3%20Sink%20Running.png)
 
 
 ## Deploying the Kafka to S3 Source Connector - 
+
+- The function of the Source connector is similar to the Sink connector but does it in the opposite direction. It takes data from an external system and moves it into an internal system. In this case AWS S3 Bucket (external) to our Kafka topic (internal).
+
+1. Now that we have a Kafka Connect Cluster up and the S3 Sink connector, it's time to deploy the S3 Source connector. You can forego this section initially if you want to test if your messages are arriving into your INBOUND topic if you so choose.
+
+2. Create a ```kafka-source-connector.yaml``` file.
+
+```vi kafka-source-connector.yaml```
+
+3. Paste the following into the newly created .yaml file.
+
+```apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaConnector
+metadata:
+  name: s3-source-connector
+  labels:
+    strimzi.io/cluster: connect-cluster-101
+spec:
+  class: org.apache.camel.kafkaconnector.CamelSourceConnector
+  tasksMax: 1
+  config:
+    key.converter: org.apache.kafka.connect.storage.StringConverter
+    value.converter: org.apache.camel.kafkaconnector.awss3.converters.S3ObjectConverter
+    # topics: my-target-topic
+    camel.source.kafka.topic: OUTBOUND
+    camel.source.url: aws-s3://<my-s3-bucket>?autocloseBody=false
+    camel.source.maxPollDuration: 10000
+    camel.component.aws-s3.accessKey: ${file:/opt/kafka/external-configuration/aws-credentials/aws-credentials-secret.properties:aws_access_key_id}
+    camel.component.aws-s3.secretKey: ${file:/opt/kafka/external-configuration/aws-credentials/aws-credentials-secret.properties:aws_secret_access_key}
+    camel.component.aws-s3.region: <US_EAST_1>
+```
+
+Similar to the kafka-connect.yaml (and kafka-sink-connector.yaml) files there are a few things here to keep note of - 
+
+- ```metadata.labels.strimzi.io/cluster```: This needs to match the name of the Kafka Connect cluster.
+- ```spec.config.topics```: The name of the topic we created earlier for Outbind messages (in this scenario). The OUTBOUND topic was created in the "Creating Event Streams Topics" section for example.
+- ```spec.config.camel.source.url"```: You will need to replace <my-s3-bucket> with the name of your AWS S3 bucket. If the name of the created bucket is ```my-s3-bucket``` then ```camel.source.url``` will look like ```camel.source.url: aws-s3://my-s3-bucket?autocloseBody=false```. 
+- ```spec.config.camel.component.aws-s3.region```: You will need to indicate the region that your S3 bucket is in. Replace <US_EAST_1> with your bucket's region.
+
+4. Save the file and create the custom resource definition for the connector by applying it.
+
+```oc apply -f kafka-source-connector.yaml```
+
+5. You can see if the connector was created by running the following - 
+
+```oc get kafkaconnector```
+
+6. This can take a few minutes but you can check the logs of the KafkaConnector by using the following command - 
+
+```oc get kafkaconnector s3-source-connector -o yaml```
+
+7. Like the Sink connector within the logs once the section of the ```Status.connectorStatus.connector.state:``` object returns `RUNNING` it means that the connector was successfully created and we can proceed!
+
+
+![S3 Source Connector Running](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/S3%20Source%20Running.png)
+
+
+
+## Testing the End-to-End Scenario - 
+
+Below are the following steps that will happen.
+
+- With the Quarkus Kafka application we will send messages every 5 seconds to our INBOUND topic.
+
+- Once the messages make it ot the INBOUND topic, the Kafka Connect S3 Sink Connector will pull the messages from the INBOUND topic and place them into the AWS S3 Bucket.
+
+- Once the messages/objects are in the AWS S3 bucket, the Kafka Connect S3 Source connector will pull (and delete) the objects from the S3 bucket and put them into the OUTBOUND topic.
