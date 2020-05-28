@@ -1,4 +1,4 @@
-# cloudpak-eventstreams-story (AWS S3 Specific)
+# IBM Event Streams on Cloud Pak for Integration Story/Lab (AWS S3 Specific)
 
 ## Overall Use Case and Goal - 
 1. Now that you have an Event Streams instance installed on Cloud Pak for Integration on top of OpenShift Container Platform the goal of this story is to show a possible use case that we can use with this technology.
