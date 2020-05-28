@@ -627,7 +627,7 @@ Similar to the kafka-connect.yaml (and kafka-sink-connector.yaml) files there ar
 
 
 
-## Testing the End-to-End Scenario - 
+## Summary of the End-to-End Scenario - 
 
 Below are the following steps that will happen.
 
@@ -636,3 +636,16 @@ Below are the following steps that will happen.
 - Once the messages make it ot the INBOUND topic, the Kafka Connect S3 Sink Connector will pull the messages from the INBOUND topic and place them into the AWS S3 Bucket.
 
 - Once the messages/objects are in the AWS S3 bucket, the Kafka Connect S3 Source connector will pull (and delete) the objects from the S3 bucket and put them into the OUTBOUND topic.
+
+
+## Test the Entire Flow - 
+
+1. Now that we have all the previous steps setup we can now test the entire flow.
+
+2. Start our Quarkus Kafka Producer application to send messages to the Event Streams INBOUND topic.
+
+`./mvnw quarkus:dev`
+
+3. Go to your Event Streams instance on Cloud Pak for Integration. Traverse to the Topics menu and select your OUTBOUND topic and then go to "Messages". Choose the "Live" option to see an up-to-date stream of your incoming messages.
+
+4. Your messages should be propagating the OUTBOUND topic automatically even though we sent messages to the INBOUND topic.
