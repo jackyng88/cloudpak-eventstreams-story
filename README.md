@@ -10,7 +10,7 @@
 
 
 ## Pre-requisites - 
-1. OpenShift Container Platform Cluster - This story will assume you have a 4.x Cluster.
+1. OpenShift Container Platform Cluster - This story will assume you have a 4.x Cluster as we will make use of Operators.
 2. Cloud Pak for Integration - This will assume you have probably at least a 2019.4.1 or 2020.x.x release of the Cloud Pak for Integration installed on OpenShift. This story will also assume you have followed the installation instructions for Event Streams outlined here from the [Cloud Pak Playbook](https://cloudpak8s.io/integration/cp4i-deploy-eventstreams/) and have a working Event Streams instance.
 3. Java Development Kit (JDK) v1.8+
 4. Apache Maven v3.6.2+
