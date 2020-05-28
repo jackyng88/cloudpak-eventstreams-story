@@ -646,6 +646,10 @@ Below are the following steps that will happen.
 
 `./mvnw quarkus:dev`
 
+![Quarkus Run Success](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Quarkus%20Run%20Success.png)
+
 3. Go to your Event Streams instance on Cloud Pak for Integration. Traverse to the Topics menu and select your OUTBOUND topic and then go to "Messages". Choose the "Live" option to see an up-to-date stream of your incoming messages.
 
 4. Your messages should be propagating the OUTBOUND topic automatically even though we sent messages to the INBOUND topic.
+
+![End to End Success](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/End%20to%20End%20Success.png)
