@@ -101,7 +101,7 @@
 ## Creating the Quarkus with MicroProfile Reactive Messaging Application - 
 1. Create the Quarkus project. You can replace <> and the contents inside of <> with whatever you would like.
 
-```
+```bash
 mvn io.quarkus:quarkus-maven-plugin:1.4.2.Final:create \
     -DprojectGroupId=<org.acme> \
     -DprojectArtifactId=<quarkus-kafka> \
@@ -112,7 +112,7 @@ mvn io.quarkus:quarkus-maven-plugin:1.4.2.Final:create \
 
 3. Create the following folder structure and then create the Producer.java file.
 
-```
+```bash
 src/main/java/org/acme/kafka/producer/Producer.java
 ```
 
@@ -121,7 +121,7 @@ src/main/java/org/acme/kafka/producer/Producer.java
 
 4. Within your Producer.java file add the following code - 
 
-```
+```java
 package org.acme.kafka.producer;
 
 import io.reactivex.Flowable;
@@ -156,7 +156,9 @@ public class Producer {
 
 Take note on the line that says @Outgoing("<TOPIC-NAME>"). For the purposes of this story we will use the INBOUND topic name that we created in the Event Streams Topic step earlier. Replace whatever is inside the quotation marks.
 
-```@Outgoing("INBOUND") ```
+```java
+@Outgoing("INBOUND")
+```
 
 Technically in @Outgoing("") is for specifying the name of the Channel, but it will default to a topic if a topic name is not provided in the application.properties file. We will address that a little bit later.
 
@@ -169,13 +171,15 @@ Technically in @Outgoing("") is for specifying the name of the Channel, but it w
    
 5. We will now need to update our applications.properties file that was automatically generated when the Quarkus project was created located here - 
 
-``` src/main/resources/application.properties```
+```bash
+src/main/resources/application.properties
+```
 
 ![application properties structure](https://github.com/jackyng88/cloudpak-eventstreams-story/raw/master/supporting-pictures/application%20properties%20structure.png)
 
 6. Copy and paste the following into your application.properties file - 
 
-```
+```properties
 # Event Streams instance connection details. The channel here (INBOUND) will by default be set as the topic.
 mp.messaging.connector.smallrye-kafka.bootstrap.servers=<es-bootstrap-address>
 mp.messaging.outgoing.INBOUND.connector=smallrye-kafka
@@ -196,29 +200,38 @@ mp.messaging.outgoing.INBOUND.ssl.truststore.password=<password>
 
 7. Replace <es-bootstrap-address> with the address of your Event Streams bootstrap server address that we took note of earlier. 
    
-```mp.messaging.connector.smallrye-kafka.bootstrap.servers=<es-bootstrap-address>```
+```properties
+mp.messaging.connector.smallrye-kafka.bootstrap.servers=<es-bootstrap-address>
+```
 
 8. Replace <APIKey> with your API Key obtained earlier.
    
-```mp.messaging.outgoing.INBOUND.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+```properties
+mp.messaging.outgoing.INBOUND.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
             username="token" \
             password="<APIKey>";
 ```
             
 9. Provide the file path to your Event Streams .jks certificate file. Replace </filepath-to-es-truststorefile/>
 
-```mp.messaging.outgoing.INBOUND.ssl.truststore.location=</filepath-to-es-truststorefile/>es-cert.jks```
+```properties
+mp.messaging.outgoing.INBOUND.ssl.truststore.location=</filepath-to-es-truststorefile/>es-cert.jks
+```
 
 10. Provide the truststore password. By default it should just be password.
 
-```mp.messaging.outgoing.INBOUND.ssl.truststore.password=<password>```
+```properties
+mp.messaging.outgoing.INBOUND.ssl.truststore.password=<password>
+```
 
 
 11. Great! We now have our simple Quarkus Kafka Producer with our Event Streams credentials. We can now test the connection.
 
 12. Run the producer code by running the following command 
 
-```./mvnw quarkus:dev```
+```bash
+./mvnw quarkus:dev
+```
 
 13. Since the code sends a message every 5 seconds, you can leave it on for a bit or you can change it to send it more frequently. Check out the Event Streams instance in the browser UI topic for messages. You can click the message under "Indexed Timestamp" to see the contents and details of the message.
 
@@ -313,7 +326,9 @@ For more information on S3 Bucket policies you can read up [here](https://docs.a
 
 6. Tail the status of your Strimzi operator install either through the web console or doing while logged in through OpenShift through your terminal. 
 
-```oc get pods -n openshift-operators```
+```bash
+oc get pods -n openshift-operators
+```
 
 ![Operator Installing](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Strimzi%20Operator%20Installing.png)
 
@@ -337,30 +352,38 @@ Note - As stated in the pre-requisites section we will be mirroring the steps fo
 
 3. I would advise you to create a new Project/Namespace to separate secrets and logic but that's up to you.
 
-```oc new-project es-s3-test```
+```bash
+oc new-project es-s3-test
+```
 
 4. We will create a new file to store our AWS credentials. Create a new file named ```aws-credentials.properties```
 
-```vi aws-credentials.properties```
+```bash
+vi aws-credentials.properties
+```
 
 5. Place the below into the properties file and use your user/IAM credentials in place of <>.
 
-```
+```properties
 aws_access_key_id=<AKIA123456EXAMPLE>
 aws_secret_access_key=<strWrz/bb8%c3po/r2d2EXAMPLEKEY>
 ```
 
 6. Create the secret from the aws-credentials.properties file. You can use the ```oc get secrets``` command in the proper project/namespace to see if it was created. This secret will be injected into the KafkaConnect cluster later.
 
-```oc create secret generic aws-credentials --from-file=aws-credentials.properties```
+```bash
+oc create secret generic aws-credentials --from-file=aws-credentials.properties
+```
 
-7. Like the previous step we need to create another secret for our Event Streams API Key that we gathered from the "Event Streams Security: API Key, Credentials and Certificates" Section earlier. This secret will be injected into the KafkaConnect cluster at run time as well. Replace <eventstreams_api_key> with your API key. This should also be in the ```es-api-key.json``` file earlier if you chose the "Download as JSON" option.
+7. Like the previous step we need to create another secret for our Event Streams API Key that we gathered from the "Event Streams Security: API Key, Credentials and Certificates" Section earlier. This secret will be injected into the KafkaConnect cluster at run time as well. Replace <eventstreams_api_key> with your API key. This should also be in the `es-api-key.json` file earlier if you chose the "Download as JSON" option.
 
-```oc create secret generic eventstreams-apikey --from-literal=password=<eventstreams_api_key>```
+```bash
+oc create secret generic eventstreams-apikey --from-literal=password=<eventstreams_api_key>\
+```
 
 8. We will now create/generate the proper certificate for use with the Kafka Connect cluster. By default our Event Streams certificate is a .jks file but we need to convert this to a .crt file. Run the following commands. These commands convert the .jks file to a new es-cert.crt file and then creates a Kubernetes/OpenShift secret for use with the KafkaConnect cluster.
 
-```
+```bash
 keytool -importkeystore -srckeystore es-cert.jks -destkeystore es-cert.p12 -deststoretype PKCS12
 openssl pkcs12 -in es-cert.p12 -nokeys -out es-cert.crt
 oc create secret generic eventstreams-truststore-cert --from-file=es-cert.crt
@@ -368,9 +391,11 @@ oc create secret generic eventstreams-truststore-cert --from-file=es-cert.crt
 
 9. (OPTIONAL) This is an Optional step. Apache Camel by default can log potentially sensitive access key information to the log files. To remedy that we will use a log4j ConfigMap to filter out that potentially sensitive information. Create a log4j.properties file and paste the following into it.
 
-```vi log4j.properties```
-
+```bash
+vi log4j.properties
 ```
+
+```properties
 # Do not change this generated file. Logging can be configured in the corresponding kubernetes/openshift resource.
 log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
 log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
@@ -414,13 +439,17 @@ log4j.appender.CONSOLE.filter.h.AcceptOnMatch=false
 
 10. (OPTIONAL) We can now create the ConfigMap from the newly created properties file.
 
-```oc create configmap custom-connect-log4j --from-file=log4j.properties```
-
-11. We will now deploy the base KafkaConnect Cluster using KafkaConnectS2I (Source to Image) custom resource. Create a new ```kafka-connect.yaml``` file and paste the following. 
-
-```vi kafka-connect.yaml```
-
+```bash
+oc create configmap custom-connect-log4j --from-file=log4j.properties
 ```
+
+11. We will now deploy the base KafkaConnect Cluster using KafkaConnectS2I (Source to Image) custom resource. Create a new `kafka-connect.yaml` file and paste the following. 
+
+```bash
+vi kafka-connect.yaml
+```
+
+```yaml
 apiVersion: kafka.strimzi.io/v1alpha1
 kind: KafkaConnectS2I
 metadata:
@@ -463,52 +492,67 @@ spec:
  
  NOTE - The following options are things we need to take note of/configure. 
  
- - (OPTIONAL)```spec.logging.name```: The name of the previously configured log4j ConfigMap. You can uncomment those previous three lines if you opted to create the ConfigMap.
- - ```spec.bootstrapServers```: Replace with your Event Streams instance bootstrap server address.
- - ```spec.tls.trustedCertificates[0].secretName```: The name of the OpenShift secret created in Step 8.
- - ```spec.authentication.passwordSecret.secretName```: The name of the OpenShift secret created from the Event Streams API Key created in Step 7.
- - ```spec.externalConfiguration.volumes[0].secret.secretName```: The name of the OpenShift secret created from the AWS credentials created in Step 6.
- - ```spec.config['group.id']```: This should be a unique ID for connecting to the same set of Kafka brokers. If we do not specify a name, multiple KafkaConnect instances will end up using the default id and end up in a race condition as they all try to vie for access.
- - ```spec.config['*.storage.topic']```: As noted in the .yaml file we have ```offset.storage.topic```, ```config.storage.topic```, and ```status.storage.topic```. The name of these topics will need to be created in your Event Streams instance to store the metadata. See the "Creating Event Streams Topics" section for a refresher on creating Event Streams topics. 
+ - (OPTIONAL)`spec.logging.name`: The name of the previously configured log4j ConfigMap. You can uncomment those previous three lines if you opted to create the ConfigMap.
+ - `spec.bootstrapServers`: Replace with your Event Streams instance bootstrap server address.
+ - `spec.tls.trustedCertificates[0].secretName`: The name of the OpenShift secret created in Step 8.
+ - `spec.authentication.passwordSecret.secretName`: The name of the OpenShift secret created from the Event Streams API Key created in Step 7.
+ - `spec.externalConfiguration.volumes[0].secret.secretName`: The name of the OpenShift secret created from the AWS credentials created in Step 6.
+ - `spec.config['group.id']`: This should be a unique ID for connecting to the same set of Kafka brokers. If we do not specify a name, multiple KafkaConnect instances will end up using the default id and end up in a race condition as they all try to vie for access.
+ - `spec.config['*.storage.topic']`: As noted in the .yaml file we have `offset.storage.topic`, `config.storage.topic`, and `status.storage.topic`. The name of these topics will need to be created in your Event Streams instance to store the metadata. See the "Creating Event Streams Topics" section for a refresher on creating Event Streams topics. 
  
  
- 12. Make sure the ```kafka-connect.yaml``` files values are correctly configured and save it. From the terminal run the following - 
- ```oc apply -f kafka-connect.yaml``` 
+ 12. Make sure the `kafka-connect.yaml` files values are correctly configured and save it. From the terminal run the following
+
+```bash
+oc apply -f kafka-connect.yaml
+``` 
  
- 13. You can check the status of the pods by running ```oc get pods```. When they're all Running we can proceed.
+ 13. You can check the status of the pods by running `oc get pods`. When they're all Running we can proceed.
  
  
  ## Building the Apache Camel Kafka Connect binaries - 
  
  1. We will need to clone from a github repository using HTTPS or SSH depending on preference. Note that the below github repository is a fork of the official [Apache Camel repository](https://github.com/apache/camel-kafka-connector).
  
- ```git clone https://github.com/osowski/camel-kafka-connector.git```
+```bash
+git clone https://github.com/osowski/camel-kafka-connector.git
+```
  
- ```git clone git@github.com:osowski/camel-kafka-connector.git```
+```bash
+git clone git@github.com:osowski/camel-kafka-connector.git
+```
  
  2. Once successfully cloned, change the directory to the root of the cloned repository. Change to the camel-kafka-connector-0.1.0-branch branch
  
- ```git checkout camel-kafka-connector-0.1.0-branch```
+```bash
+git checkout camel-kafka-connector-0.1.0-branch
+```
  
  3. We will now build the project with Maven. Note that this can take around 30 minutes! 
  
- ```mvn clean package```
+ ```bash
+ mvn clean package
+ ```
  
  4. Once the build is complete copy the generated S3 artifacts to the core package build artifacts.
  
 
-```cp connectors/camel-aws-s3-kafka-connector/target/camel-aws-s3-kafka-connector-0.1.0.jar core/target/camel-kafka-connector-0.1.0-package/share/java/camel-kafka-connector/```
-
-
-5. We will now start an OpenShift build from the previously generated S3 artifacts. Note the ```connect-cluster-101-connect``` after start-build. The ```-connect``` was appended automatically when our Kafka Connect cluster pod was created.
-
+```bash
+cp connectors/camel-aws-s3-kafka-connector/target/camel-aws-s3-kafka-connector-0.1.0.jar core/target/camel-kafka-connector-0.1.0-package/share/java/camel-kafka-connector/
 ```
+
+
+5. We will now start an OpenShift build from the previously generated S3 artifacts. Note the `connect-cluster-101-connect` after start-build. The `-connect` was appended automatically when our Kafka Connect cluster pod was created.
+
+```bash
 oc start-build connect-cluster-101-connect --from-dir=./core/target/camel-kafka-connector-0.1.0-package/share/java --follow
 ```
 
-6. Check the status of your new build. This build should've created a new pod with a name along the lines of ```connect-cluster-101-connect-2-[random-suffix]```. The original pod should have had a name similar to ```connect-cluster-101-connect-1-[random-suffix]``` with a 1 instead of a 2 for instance. Wait for the pod to go into a Running state.
+6. Check the status of your new build. This build should've created a new pod with a name along the lines of `connect-cluster-101-connect-2-[random-suffix]`. The original pod should have had a name similar to `connect-cluster-101-connect-1-[random-suffix]` with a 1 instead of a 2 for instance. Wait for the pod to go into a Running state.
 
-```oc get pods -w```
+```bash
+oc get pods -w
+```
 
 
 ## Deploying the Kafka to S3 Sink Connector - 
@@ -517,13 +561,16 @@ oc start-build connect-cluster-101-connect --from-dir=./core/target/camel-kafka-
 
 1. Now that we have a Kafka Connect Cluster up, we will need to create an S3 Sink Connector with a KafkaConnect custom resource definition managed by the Strimzi Operator that we deployed.
 
-2. Create a ```kafka-sink-connector.yaml``` file.
+2. Create a `kafka-sink-connector.yaml` file.
 
-```vi kafka-sink-connector.yaml```
+```bash
+vi kafka-sink-connector.yaml
+```
 
 3. Paste the following into the newly created .yaml file.
 
-```apiVersion: kafka.strimzi.io/v1alpha1
+```yaml
+apiVersion: kafka.strimzi.io/v1alpha1
 kind: KafkaConnector
 metadata:
   name: s3-sink-connector
@@ -544,26 +591,32 @@ spec:
     camel.component.aws-s3.region: <US_EAST_1>
 ```
 
-Similar to the kafka-connect.yaml file there are a few things here to keep note of - 
+Similar to the kafka-connect.yaml file there are a few things here to keep note of
 
-- ```metadata.labels.strimzi.io/cluster```: This needs to match the name of the Kafka Connect cluster.
-- ```spec.config.topics```: The name of the topic we created earlier for Inbound messages. The INBOUND topic was created in the "Creating Event Streams Topics" section for example.
-- ```spec.config.camel.sink.url"```: You will need to replace <my-s3-bucket> with the name of your AWS S3 bucket. If the name of the created bucket is ```my-s3-bucket``` then ```camel.sink.url``` will look like ```camel.sink.url: aws-s3://my-s3-bucket?keyName=${date:now:yyyyMMdd-HHmmssSSS}-${exchangeId}```. 
-- ```spec.config.camel.component.aws-s3.region```: You will need to indicate the region that your S3 bucket is in. Replace <US_EAST_1> with your bucket's region.
+- `metadata.labels.strimzi.io/cluster`: This needs to match the name of the Kafka Connect cluster.
+- `spec.config.topics`: The name of the topic we created earlier for Inbound messages. The INBOUND topic was created in the "Creating Event Streams Topics" section for example.
+- `spec.config.camel.sink.url`: You will need to replace <my-s3-bucket> with the name of your AWS S3 bucket. If the name of the created bucket is `my-s3-bucket` then `camel.sink.url` will look like `camel.sink.url: aws-s3://my-s3-bucket?keyName=${date:now:yyyyMMdd-HHmmssSSS}-${exchangeId}`. 
+- `spec.config.camel.component.aws-s3.region`: You will need to indicate the region that your S3 bucket is in. Replace <US_EAST_1> with your bucket's region.
 
 4. Save the file and create the custom resource definition for the connector by applying it.
 
-```oc apply -f kafka-sink-connector.yaml```
+```bash
+oc apply -f kafka-sink-connector.yaml
+```
 
 5. You can see if the connector was created by running the following - 
 
-```oc get kafkaconnector```
+```bash
+oc get kafkaconnector
+```
 
 6. This can take a few minutes but you can check the logs of the KafkaConnector by using the following command - 
 
-```oc get kafkaconnector s3-sink-connector -o yaml```
+```bash
+oc get kafkaconnector s3-sink-connector -o yaml
+```
 
-7. In the logs once the section of the ```Status.connectorStatus.connector.state:``` object returns `RUNNING` it means that the connector was successfully created and we can proceed!
+7. In the logs once the section of the `Status.connectorStatus.connector.state:` object returns `RUNNING` it means that the connector was successfully created and we can proceed!
 
 ![S3 Sink Connector Running](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/S3%20Sink%20Running.png)
 
@@ -574,13 +627,16 @@ Similar to the kafka-connect.yaml file there are a few things here to keep note 
 
 1. Now that we have a Kafka Connect Cluster up and the S3 Sink connector, it's time to deploy the S3 Source connector. You can forego this section initially if you want to test if your messages are arriving into your INBOUND topic if you so choose.
 
-2. Create a ```kafka-source-connector.yaml``` file.
+2. Create a `kafka-source-connector.yaml` file.
 
-```vi kafka-source-connector.yaml```
+```bash
+vi kafka-source-connector.yaml
+```
 
 3. Paste the following into the newly created .yaml file.
 
-```apiVersion: kafka.strimzi.io/v1alpha1
+```yaml
+apiVersion: kafka.strimzi.io/v1alpha1
 kind: KafkaConnector
 metadata:
   name: s3-source-connector
@@ -603,24 +659,30 @@ spec:
 
 Similar to the kafka-connect.yaml (and kafka-sink-connector.yaml) files there are a few things here to keep note of - 
 
-- ```metadata.labels.strimzi.io/cluster```: This needs to match the name of the Kafka Connect cluster.
-- ```spec.config.topics```: The name of the topic we created earlier for Outbind messages (in this scenario). The OUTBOUND topic was created in the "Creating Event Streams Topics" section for example.
-- ```spec.config.camel.source.url"```: You will need to replace <my-s3-bucket> with the name of your AWS S3 bucket. If the name of the created bucket is ```my-s3-bucket``` then ```camel.source.url``` will look like ```camel.source.url: aws-s3://my-s3-bucket?autocloseBody=false```. 
-- ```spec.config.camel.component.aws-s3.region```: You will need to indicate the region that your S3 bucket is in. Replace <US_EAST_1> with your bucket's region.
+- `metadata.labels.strimzi.io/cluster`: This needs to match the name of the Kafka Connect cluster.
+- `spec.config.topics`: The name of the topic we created earlier for Outbind messages (in this scenario). The OUTBOUND topic was created in the "Creating Event Streams Topics" section for example.
+- `spec.config.camel.source.url`: You will need to replace <my-s3-bucket> with the name of your AWS S3 bucket. If the name of the created bucket is `my-s3-bucket` then `camel.source.url` will look like `camel.source.url: aws-s3://my-s3-bucket?autocloseBody=false`. 
+- `spec.config.camel.component.aws-s3.region`: You will need to indicate the region that your S3 bucket is in. Replace <US_EAST_1> with your bucket's region.
 
 4. Save the file and create the custom resource definition for the connector by applying it.
 
-```oc apply -f kafka-source-connector.yaml```
+```bash
+oc apply -f kafka-source-connector.yaml
+```
 
 5. You can see if the connector was created by running the following - 
 
-```oc get kafkaconnector```
+```bash
+oc get kafkaconnector
+```
 
 6. This can take a few minutes but you can check the logs of the KafkaConnector by using the following command - 
 
-```oc get kafkaconnector s3-source-connector -o yaml```
+```bash
+oc get kafkaconnector s3-source-connector -o yaml
+```
 
-7. Like the Sink connector within the logs once the section of the ```Status.connectorStatus.connector.state:``` object returns `RUNNING` it means that the connector was successfully created and we can proceed!
+7. Like the Sink connector within the logs once the section of the `Status.connectorStatus.connector.state:` object returns `RUNNING` it means that the connector was successfully created and we can proceed!
 
 
 ![S3 Source Connector Running](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/S3%20Source%20Running.png)
@@ -644,7 +706,9 @@ Below are the following steps that will happen.
 
 2. Start our Quarkus Kafka Producer application to send messages to the Event Streams INBOUND topic.
 
-`./mvnw quarkus:dev`
+```bash
+./mvnw quarkus:dev
+```
 
 ![Quarkus Run Success](https://github.com/jackyng88/cloudpak-eventstreams-story/blob/master/supporting-pictures/Quarkus%20Run%20Success.png)
 
